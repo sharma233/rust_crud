@@ -6,7 +6,21 @@ use axum::{
 };
 use serde::Deserialize;
 use sqlite;
+use minijinja::render;
 
+const HOME_TEMPLATE:&str = r#"
+    <form action="/" method="POST">
+        <label for="item">Item:</label>
+        <input type="text" name="item">
+        <br>
+        <input type="submit" value="Add!">
+    </form><br>
+    <ul>
+        {% for item in backlog_items %}
+        <li>{{ item }}</li>
+        {% endfor %}
+    <ul>
+"#;
 
 #[derive(Deserialize, Debug)]
 struct ItemPayload {
@@ -38,25 +52,18 @@ async fn root_post(Form(item_payload): Form<ItemPayload>) -> Redirect {
 async fn root() -> Html<String> {
     let connection:sqlite::Connection = sqlite::open("./backlog.db").unwrap();
     let query = "SELECT name FROM movies";
-    let mut html_list = "<ul>".to_string();
+
+    let mut items:Vec<String> = vec![];
 
     connection
         .iterate(query, |pairs| {
             for &(name, value) in pairs.iter() {
-                let ul_element = format!("<li> {} </li>", value.unwrap());
-                html_list = String::new() + &html_list + &ul_element;
+                items.push(String::from(value.unwrap()));
                 println!("{} = {}", name, value.unwrap());
             }
             true
         }).unwrap();
-        html_list = String::new() + &html_list + "</ul>";
 
-    Html(
-        "<form action=\"/\" method=\"POST\">
-            <label for=\"item\">Item:</label>
-            <input type=\"text\" name=\"item\">
-            <br>
-            <input type=\"submit\" value=\"Add!\">
-        </form><br>".to_string() + &html_list
-    )
+    let r = render!(HOME_TEMPLATE, backlog_items => items);
+    Html(r)
 }

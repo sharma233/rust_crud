@@ -10,3 +10,4 @@ axum = "0.7.5"
 sqlite = "0.36.1"
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0.208", features=["derive"] }
+minijinja = "2.1.2"

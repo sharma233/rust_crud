@@ -39,6 +39,7 @@ name = "axum"
 version = "0.1.0"
 dependencies = [
  "axum 0.7.5",
+ "minijinja",
  "serde",
  "sqlite",
  "tokio",
@@ -326,6 +327,15 @@ name = "mime"
 version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
+
+[[package]]
+name = "minijinja"
+version = "2.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bf369fce3289017a63e514dfca10a0a6f1a02216b21b588b79f6a1081eb999f5"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "miniz_oxide"
