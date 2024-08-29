@@ -7,20 +7,9 @@ use axum::{
 use serde::Deserialize;
 use sqlite;
 use minijinja::render;
+use std::fs;
 
-const HOME_TEMPLATE:&str = r#"
-    <form action="/" method="POST">
-        <label for="item">Item:</label>
-        <input type="text" name="item">
-        <br>
-        <input type="submit" value="Add!">
-    </form><br>
-    <ul>
-        {% for item in backlog_items %}
-        <li>{{ item }}</li>
-        {% endfor %}
-    <ul>
-"#;
+const TEMPLATE_PATH:&str = "templates";
 
 #[derive(Deserialize, Debug)]
 struct ItemPayload {
@@ -50,6 +39,8 @@ async fn root_post(Form(item_payload): Form<ItemPayload>) -> Redirect {
 }
 
 async fn root() -> Html<String> {
+    let home_template_path:String = String::from(TEMPLATE_PATH) + "/home.html";
+    let home_template = fs::read_to_string(home_template_path).unwrap();
     let connection:sqlite::Connection = sqlite::open("./backlog.db").unwrap();
     let query = "SELECT name FROM movies";
 
@@ -64,6 +55,6 @@ async fn root() -> Html<String> {
             true
         }).unwrap();
 
-    let r = render!(HOME_TEMPLATE, backlog_items => items);
+    let r = render!(&home_template, backlog_items => items);
     Html(r)
 }
