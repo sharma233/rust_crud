@@ -6,10 +6,13 @@ use axum::{
 };
 use serde::Deserialize;
 use sqlite;
-use minijinja::render;
-use std::fs;
+use minijinja::{Environment, context};
 
-const TEMPLATE_PATH:&str = "templates";
+fn make_env() -> Environment<'static> {
+    let mut env = Environment::new();
+    env.set_loader(minijinja::path_loader("templates"));
+    env
+}
 
 #[derive(Deserialize, Debug)]
 struct ItemPayload {
@@ -39,13 +42,13 @@ async fn root_post(Form(item_payload): Form<ItemPayload>) -> Redirect {
 }
 
 async fn root() -> Html<String> {
-    let home_template_path:String = String::from(TEMPLATE_PATH) + "/home.html";
-    let home_template = fs::read_to_string(home_template_path).unwrap();
+    let env = make_env();
+    let home_template = env.get_template("home.html").unwrap();
+
     let connection:sqlite::Connection = sqlite::open("./backlog.db").unwrap();
     let query = "SELECT name FROM movies";
 
     let mut items:Vec<String> = vec![];
-
     connection
         .iterate(query, |pairs| {
             for &(name, value) in pairs.iter() {
@@ -55,6 +58,10 @@ async fn root() -> Html<String> {
             true
         }).unwrap();
 
-    let r = render!(&home_template, backlog_items => items);
-    Html(r)
+    let page = context! {
+        backlog_items => items
+    };
+
+    Html(home_template.render(context!(page)).unwrap())
+
 }

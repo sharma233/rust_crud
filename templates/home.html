@@ -1,11 +1,14 @@
-<form action="/" method="POST">
-    <label for="item">Item:</label>
-    <input type="text" name="item">
-    <br>
-    <input type="submit" value="Add!">
-</form><br>
-<ul>
-    {% for item in backlog_items %}
-    <li>{{ item }}</li>
-    {% endfor %}
-<ul>
+{% extends "index.html" %}
+{% block content %}
+    <form action="/" method="POST">
+        <label for="item">Item:</label>
+        <input type="text" name="item">
+        <br>
+        <input type="submit" value="Add!">
+    </form><br>
+    <ul>
+        {% for item in page.backlog_items %}
+        <li>{{ item }}</li>
+        {% endfor %}
+    <ul>
+{% endblock %}
