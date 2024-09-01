@@ -1,5 +1,5 @@
 [package]
-name = "axum"
+name = "movie_backlog"
 version = "0.1.0"
 edition = "2021"
 
@@ -11,3 +11,5 @@ rusqlite = { version = "0.32.1", features = ["bundled"] }
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0.208", features=["derive"] }
 minijinja = { version = "2.1.2", features=["loader"] }
+r2d2_sqlite = { version = "0.25.0" }
+r2d2 = { version = "0.8.10" }
