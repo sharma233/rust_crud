@@ -1,7 +1,8 @@
 use axum::{
-        routing::{get, post},
+        routing::{get, post, delete},
         response::{Redirect, Html},
         Form,Router,
+        extract::{Path},
         
 };
 use serde::{Serialize, Deserialize};
@@ -31,7 +32,8 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(root))
-        .route("/", post(root_post));
+        .route("/", post(root_post))
+        .route("/movie/:movie_id", delete(movie_delete));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     axum::serve(listener, app).await.unwrap();
@@ -71,4 +73,14 @@ async fn root() -> Html<String> {
 
     Html(home_template.render(context!(page)).unwrap())
 
+}
+
+async fn movie_delete(Path(movie_id): Path<String>) -> String {
+    let conn = Connection::open("./backlog.db").unwrap();
+    conn.execute(
+        "DELETE FROM movies WHERE rowid=(?1)",
+        params![movie_id],
+    ).unwrap();
+
+    return movie_id;
 }
