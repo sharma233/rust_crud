@@ -1,4 +1,8 @@
 {% extends "index.html" %}
+
+{% block head %}
+{% endblock %}
+
 {% block content %}
     <div class="mb-5 p-3 container-fluid">
         <form action="/" method="POST">
@@ -14,8 +18,12 @@
         <h2>Current Items</h2>
         <ul class="list-group">
             {% for item in page.backlog_items %}
-            <li class="list-group-item">{{ item }} <i class="bi bi-trash"></i></li>
+            <li data-id={{item.id}} class="list-group-item">{{ item.name }} <button class="btn btn-link" type="button" data-id={{item.id}} id="del-item-id-{{item.id}}"> <i class="bi bi-trash"></i> </button> </li>
             {% endfor %}
         <ul>
     </div>
+{% endblock %}
+
+{% block scripts %}
+    <script> {% include "js/home.js" %} </script>
 {% endblock %}

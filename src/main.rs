@@ -4,8 +4,8 @@ use axum::{
         Form,Router,
         
 };
-use serde::Deserialize;
-use sqlite;
+use serde::{Serialize, Deserialize};
+use rusqlite::{Connection, params};
 use minijinja::{Environment, context};
 
 fn make_env() -> Environment<'static> {
@@ -14,9 +14,15 @@ fn make_env() -> Environment<'static> {
     env
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 struct ItemPayload {
-    item: String,
+    item: String
+}
+
+#[derive(Serialize, Deserialize)]
+struct Movie {
+    id: i32,
+    name: String
 }
 
 #[tokio::main]
@@ -32,11 +38,11 @@ async fn main() {
 }
 
 async fn root_post(Form(item_payload): Form<ItemPayload>) -> Redirect {
-    let connection:sqlite::Connection = sqlite::open("./backlog.db").unwrap();
-    let query = format!("
-        INSERT INTO movies VALUES (\'{}\');
-    ", &item_payload.item);
-    connection.execute(query).unwrap();
+    let conn = Connection::open("./backlog.db").unwrap();
+    conn.execute(
+        "INSERT INTO movies (name) VALUES (?1)",
+        params![&item_payload.item],
+    ).unwrap();
 
     Redirect::to("/")
 }
@@ -45,21 +51,22 @@ async fn root() -> Html<String> {
     let env = make_env();
     let home_template = env.get_template("home.html").unwrap();
 
-    let connection:sqlite::Connection = sqlite::open("./backlog.db").unwrap();
-    let query = "SELECT name FROM movies";
+    let conn = Connection::open("./backlog.db").unwrap();
+    let mut stmt = conn.prepare("SELECT rowid, name FROM movies").unwrap();
+    let movies_iter = stmt.query_map([], |row| {
+        Ok(Movie {
+            id: row.get(0).unwrap(),
+            name: row.get(1).unwrap()
+        })
+    }).unwrap();
 
-    let mut items:Vec<String> = vec![];
-    connection
-        .iterate(query, |pairs| {
-            for &(name, value) in pairs.iter() {
-                items.push(String::from(value.unwrap()));
-                println!("{} = {}", name, value.unwrap());
-            }
-            true
-        }).unwrap();
+    let mut movies:Vec<Movie> = Vec::new();
+    for movie in movies_iter {
+        movies.push(movie.unwrap());
+    }
 
     let page = context! {
-        backlog_items => items
+        backlog_items => movies 
     };
 
     Html(home_template.render(context!(page)).unwrap())

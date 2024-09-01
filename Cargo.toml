@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 axum = "0.7.5"
-sqlite = "0.36.1"
+rusqlite = { version = "0.32.1", features = ["bundled"] }
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0.208", features=["derive"] }
 minijinja = { version = "2.1.2", features=["loader"] }
