@@ -4,8 +4,7 @@ use r2d2_sqlite::SqliteConnectionManager;
 
 mod api;
 mod routes;
-
-
+mod thirdparty;
 
 #[tokio::main]
 async fn main() { 

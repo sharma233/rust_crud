@@ -11,7 +11,8 @@ use rusqlite::params;
 #[derive(Serialize, Deserialize)]
 pub struct Movie {
     pub id: i32,
-    pub name: String
+    pub name: String,
+    pub tmdb_id: i32
 }
 
 pub fn movie_api_route(shared_state:Arc<movie_backlog::AppState>) -> Router {

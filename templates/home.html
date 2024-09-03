@@ -7,18 +7,23 @@
     <div class="mb-5 p-3 container-fluid">
         <form action="/" method="POST">
             <div class="mb-3">
-                <label class="form-label" for="item">Item:</label>
+                <label class="form-label" for="item">Movie Name:</label>
                 <input type="text" class="form-control" name="item">
             </div>
-            <input type="submit" class="btn btn-primary" value="Add!">
+            <input type="submit" class="btn btn-primary" value="search">
         </form>
     </div>
 
     <div class="container-fluid">
-        <h2>Current Items</h2>
+        <h2>Current Movies</h2>
         <ul class="list-group">
             {% for item in page.backlog_items %}
-            <li data-id={{item.id}} class="list-group-item">{{ item.name }} <button class="btn btn-link" type="button" data-id={{item.id}} id="del-item-id-{{item.id}}"> <i class="bi bi-trash"></i> </button> </li>
+            <li data-tmdb-id={{item.tmdb_id}} data-id={{item.id}} class="list-group-item">
+                {{ item.name }} 
+                <button class="btn btn-link" type="button" data-id={{item.id}} id="del-item-id-{{item.id}}"> <i class="bi bi-trash"></i> </button> 
+                <a href="https://letterboxd.com/tmdb/{{item.tmdb_id}}" class="btn btn-link"> <i class="bi bi-camera-reels"></i></a> 
+                <a href="http://192.168.2.40:5055/movie/{{item.tmdb_id}}" class="btn btn-link"> <i class="bi bi-cloud-download"></i></a> 
+            </li>
             {% endfor %}
         <ul>
     </div>
