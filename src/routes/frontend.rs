@@ -8,6 +8,7 @@ use serde::{Serialize, Deserialize};
 use rusqlite::params;
 use minijinja::{Environment, context};
 use std::sync::Arc;
+use urlencoding::encode;
 use crate::api;
 use crate::thirdparty;
 
@@ -66,13 +67,17 @@ struct SearchResultWithContext {
 
 async fn search(State(_state): State<Arc<movie_backlog::AppState>>, query_params: Query<SearchQueryParams>) -> Html<String>{
     let query_params = query_params.0;
-    let search_results = crate::thirdparty::tmdb::search(&query_params.query, query_params.page).await.unwrap();
-    println!("{}", search_results.results[0].title);
+    let search_query = encode(&query_params.query);
+    let search_results = crate::thirdparty::tmdb::search(&search_query.to_string(), query_params.page).await;
+
+    let Ok(search_results) = search_results else {
+        return render_error();
+    };
 
     let results_with_context = SearchResultWithContext {
         api_search_results: search_results, 
         current_page: query_params.page,
-        current_query: query_params.query
+        current_query: search_query.to_string()
     };
 
     let page = context! {
@@ -89,16 +94,24 @@ async fn root(State(state): State<Arc<movie_backlog::AppState>>) -> Html<String>
     let env = make_env();
     let home_template = env.get_template("home.html").unwrap();
 
-    let conn = state.conn_pool.get().unwrap();
+    let conn = state.conn_pool.get();
+    let Ok(conn) = conn else {
+        return render_error();
+    };
+
     let mut stmt = conn.prepare("SELECT rowid, name, tmdb_id FROM movies").unwrap();
 
     let movies_iter = stmt.query_map([], |row| {
         Ok(api::movie::Movie {
-            id: row.get(0).unwrap(),
-            name: row.get(1).unwrap(),
-            tmdb_id: row.get(2).unwrap()
+            id: row.get(0)?,
+            name: row.get(1)?,
+            tmdb_id: row.get(2)?
         })
-    }).unwrap();
+    });
+
+    let Ok(movies_iter) = movies_iter else {
+        return render_error();
+    };
 
     let mut movies:Vec<api::movie::Movie> = Vec::new();
     for movie in movies_iter {
@@ -110,4 +123,10 @@ async fn root(State(state): State<Arc<movie_backlog::AppState>>) -> Html<String>
     };
 
     Html(home_template.render(context!(page)).unwrap())
+}
+
+fn render_error() -> Html<String> {
+    let env = make_env();
+    let error_template = env.get_template("error.html").unwrap();
+    Html(error_template.render(()).unwrap())
 }
